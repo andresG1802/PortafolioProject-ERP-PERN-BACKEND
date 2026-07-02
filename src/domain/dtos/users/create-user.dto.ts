@@ -4,11 +4,11 @@ export class CreateUserDto{
         public email:string,
         public password:string
     ){}
-    static create(props:{[key:string]:any}){
+    static create(props:{[key:string]:any}): [string?, CreateUserDto?] {
         const {name,email,password} = props;
-        if(!name || !email || !password){
-            throw new Error('One field is missing');
-        } 
-        return new CreateUserDto(name,email,password);
-    }    
+        if(!name) return ['Name is required'];
+        if(!email) return ['Email is required'];
+        if(!password) return ['Password is required'];
+        return [undefined, new CreateUserDto(name,email,password)];
+    }
 }

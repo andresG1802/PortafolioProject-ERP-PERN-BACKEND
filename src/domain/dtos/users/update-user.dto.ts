@@ -15,8 +15,8 @@ export class UpdateUserDto{
     }
     static create(props:{[key:string]:any}) : [string | undefined, UpdateUserDto?]{
         const {id,name,email,password} = props;
-        if(!id || isNaN(Number(id))){
-            return ['Id is missing or invalid'];
+        if(!id){
+            return ['Id is required'];
         }
         return [undefined, new UpdateUserDto(id,name,email,password)];
     }
