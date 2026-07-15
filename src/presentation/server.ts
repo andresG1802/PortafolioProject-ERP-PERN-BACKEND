@@ -1,9 +1,12 @@
 import express, { Router } from 'express';
+import cors from 'cors';
 
 interface Options {
     port: number;
     routes: Router;
 }
+
+const DEFAULT_ORIGINS = ['http://localhost:5173'];
 
 export class Server {
     private app = express();
@@ -17,6 +20,11 @@ export class Server {
     }
 
     async start() {
+        const allowedOrigins = process.env['CORS_ORIGIN']
+            ? process.env['CORS_ORIGIN'].split(',').map(origin => origin.trim())
+            : DEFAULT_ORIGINS;
+
+        this.app.use(cors({ origin: allowedOrigins }));
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(this.routes);

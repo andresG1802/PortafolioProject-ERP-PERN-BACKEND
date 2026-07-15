@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UpdateUserDto } from '../../domain/dtos';
+import { UserEntity } from '../../domain/entities/user.entity';
 import { GetUsersUseCase } from '../../use-cases/users/get-users.use-case';
 import { GetUserByIdUseCase } from '../../use-cases/users/get-user-by-id.use-case';
 import { UpdateUserUseCase } from '../../use-cases/users/update-user.use-case';
@@ -8,20 +9,22 @@ import { UserRepositoryImpl } from '../../infrastructure/repositories/user.repos
 import { UserDataSourceImpl } from '../../infrastructure/datasources/user.datasource.impl';
 import { handleError } from '../shared/handle-error';
 
+const toPublicUser = ({ id, name, email }: UserEntity) => ({ id, name, email });
+
 export class UserController {
     private readonly userRepository = new UserRepositoryImpl(new UserDataSourceImpl());
 
     getAll = (_req: Request, res: Response) => {
         new GetUsersUseCase(this.userRepository)
             .execute()
-            .then(users => res.json(users))
+            .then(users => res.json(users.map(toPublicUser)))
             .catch(err => handleError(err, res));
     };
 
     getById = (req: Request, res: Response) => {
         new GetUserByIdUseCase(this.userRepository)
             .execute(String(req.params['id']))
-            .then(user => res.json(user))
+            .then(user => res.json(toPublicUser(user)))
             .catch(err => handleError(err, res));
     };
 
@@ -31,14 +34,14 @@ export class UserController {
 
         new UpdateUserUseCase(this.userRepository)
             .execute(dto!)
-            .then(user => res.json(user))
+            .then(user => res.json(toPublicUser(user)))
             .catch(err => handleError(err, res));
     };
 
     delete = (req: Request, res: Response) => {
         new DeleteUserUseCase(this.userRepository)
             .execute(String(req.params['id']))
-            .then(user => res.json(user))
+            .then(user => res.json(toPublicUser(user)))
             .catch(err => handleError(err, res));
     };
 }
