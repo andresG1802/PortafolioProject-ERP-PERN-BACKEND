@@ -12,6 +12,7 @@ export class ProductRoutes {
         router.post('/', controller.create);
         router.get('/', controller.getAll);
         router.get('/:id', controller.getById);
+        router.get('/:id/stock', controller.getStock);
         router.put('/:id', controller.update);
         router.delete('/:id', controller.delete);
 

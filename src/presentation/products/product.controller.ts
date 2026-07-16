@@ -5,12 +5,16 @@ import { GetProductsUseCase } from '../../use-cases/products/get-products.use-ca
 import { GetProductByIdUseCase } from '../../use-cases/products/get-product-by-id.use-case';
 import { UpdateProductUseCase } from '../../use-cases/products/update-product.use-case';
 import { DeleteProductUseCase } from '../../use-cases/products/delete-product.use-case';
+import { GetProductStockUseCase } from '../../use-cases/stock-movements/get-product-stock.use-case';
 import { ProductRepositoryImpl } from '../../infrastructure/repositories/product.repository.impl';
 import { ProductDataSourceImpl } from '../../infrastructure/datasources/product.datasource.impl';
+import { StockMovementRepositoryImpl } from '../../infrastructure/repositories/stock-movement.repository.impl';
+import { StockMovementDataSourceImpl } from '../../infrastructure/datasources/stock-movement.datasource.impl';
 import { handleError } from '../shared/handle-error';
 
 export class ProductController {
     private readonly productRepository = new ProductRepositoryImpl(new ProductDataSourceImpl());
+    private readonly stockMovementRepository = new StockMovementRepositoryImpl(new StockMovementDataSourceImpl());
 
     create = (req: Request, res: Response) => {
         const [error, dto] = CreateProductDto.create(req.body);
@@ -50,6 +54,13 @@ export class ProductController {
         new DeleteProductUseCase(this.productRepository)
             .execute(String(req.params['id']))
             .then(product => res.json(product))
+            .catch(err => handleError(err, res));
+    };
+
+    getStock = (req: Request, res: Response) => {
+        new GetProductStockUseCase(this.stockMovementRepository)
+            .execute(String(req.params['id']))
+            .then(stock => res.json(stock))
             .catch(err => handleError(err, res));
     };
 }

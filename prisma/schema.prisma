@@ -11,6 +11,28 @@ enum Role {
   USER
 }
 
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  CONFIRMED
+  RECEIVED
+  CANCELLED
+}
+
+enum SalesOrderStatus {
+  DRAFT
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -23,15 +45,162 @@ model User {
   @@map("users")
 }
 
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+model Supplier {
+  id             String          @id @default(uuid())
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@map("suppliers")
+}
+
+model Warehouse {
+  id             String          @id @default(uuid())
+  name           String          @unique
+  location       String?
+  stockMovements StockMovement[]
+  purchaseOrders PurchaseOrder[]
+  salesOrders    SalesOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@map("warehouses")
+}
+
+model Customer {
+  id          String       @id @default(uuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  salesOrders SalesOrder[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("customers")
+}
+
 model Product {
   id          String   @id @default(uuid())
   name        String
   description String?
   price       Float
-  stock       Int      @default(0)
-  category    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+  supplierId String?
+
+  stockMovements     StockMovement[]
+  purchaseOrderItems PurchaseOrderItem[]
+  salesOrderItems    SalesOrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("products")
+}
+
+model StockMovement {
+  id        String       @id @default(uuid())
+  type      MovementType
+  quantity  Int
+  reason    String?
+  reference String?
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  warehouseId String
+
+  createdAt DateTime @default(now())
+
+  @@index([productId, warehouseId])
+  @@map("stock_movements")
+}
+
+model PurchaseOrder {
+  id     String              @id @default(uuid())
+  status PurchaseOrderStatus @default(DRAFT)
+  notes  String?
+
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  supplierId String
+
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  warehouseId String
+
+  items PurchaseOrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id String @id @default(uuid())
+
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  purchaseOrderId String
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  quantity Int
+  unitCost Float
+
+  @@map("purchase_order_items")
+}
+
+model SalesOrder {
+  id     String           @id @default(uuid())
+  status SalesOrderStatus @default(DRAFT)
+  notes  String?
+
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String
+
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  warehouseId String
+
+  items SalesOrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sales_orders")
+}
+
+model SalesOrderItem {
+  id String @id @default(uuid())
+
+  salesOrder   SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  salesOrderId String
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  quantity  Int
+  unitPrice Float
+
+  @@map("sales_order_items")
 }
